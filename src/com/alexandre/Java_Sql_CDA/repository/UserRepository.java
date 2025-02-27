@@ -1,6 +1,7 @@
 package com.alexandre.Java_Sql_CDA.repository;
 
 import com.alexandre.Java_Sql_CDA.db.Db;
+import com.alexandre.Java_Sql_CDA.model.Role;
 import com.alexandre.Java_Sql_CDA.model.User;
 import com.sun.source.tree.UsesTree;
 
@@ -52,7 +53,8 @@ public class UserRepository {
         User getUser = null;
 
         try {
-            String request =  "SELECT id, firstname, lastname, email FROM users WHERE email = ?";
+            String request =  "SELECT u.id, u.firstname, u.lastname, u.email, r.id AS \"RoleId\", r.name FROM users AS u"+
+                    "INNER JOIN roles AS r ON r.id = u.role_id WHERE u.email=?";
 
             PreparedStatement prepare = connection.prepareStatement(request);
 
@@ -66,6 +68,9 @@ public class UserRepository {
                 getUser.setFirstname(resultSet.getString("firstname"));
                 getUser.setLastname(resultSet.getString("lastname"));
                 getUser.setEmail(resultSet.getString("email"));
+                Role role = new Role(resultSet.getString("name"));
+                role.setId(resultSet.getInt("RoleId"));
+                getUser.setRole(role);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -78,7 +83,8 @@ public class UserRepository {
         User getUser = null;
 
         try {
-            String request =  "SELECT id, firstname, lastname, email, password FROM users WHERE id = ?";
+            String request =  "SELECT u.id, u.firstname, u.lastname, u.email, r.id AS \"RoleId\", r.name FROM users AS u"+
+                    "INNER JOIN roles AS r ON r.id = u.role_id WHERE u.id=?";
 
             PreparedStatement prepare = connection.prepareStatement(request);
 
@@ -93,6 +99,9 @@ public class UserRepository {
                 getUser.setLastname(resultSet.getString("lastname"));
                 getUser.setEmail(resultSet.getString("email"));
                 getUser.setPassword(resultSet.getString("password"));
+                Role role = new Role(resultSet.getString("name"));
+                role.setId(resultSet.getInt("RoleId"));
+                getUser.setRole(role);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -127,7 +136,8 @@ public class UserRepository {
         List<Object> users = new ArrayList<>();
 
         try {
-            String request =  "SELECT id, firstname, lastname, email FROM users";
+            String request =  "SELECT u.id, u.firstname, u.lastname, u.email, r.id AS \"RoleId\", r.name FROM users AS u"+
+                    "INNER JOIN roles AS r ON r.id = u.role_id";
 
             PreparedStatement prepare = connection.prepareStatement(request);
 
@@ -139,6 +149,9 @@ public class UserRepository {
                 getUser.setFirstname(resultSet.getString("firstname"));
                 getUser.setLastname(resultSet.getString("lastname"));
                 getUser.setEmail(resultSet.getString("email"));
+                Role role = new Role(resultSet.getString("name"));
+                role.setId(resultSet.getInt("RoleId"));
+                getUser.setRole(role);
                 users.add(getUser);
             }
         } catch (Exception e) {
@@ -150,7 +163,7 @@ public class UserRepository {
     public static User update(User user, String email){
         User oldUser = findByEmail(email);
         try {
-            String request =  "UPDATE users SET firstname=?, lastname=?, email=?, password=? WHERE id =?";
+            String request =  "UPDATE users SET firstname=?, lastname=?, email=?, role_id=(SELECT id FROM roles WHERE name=?) password=? WHERE id =?";
 
             PreparedStatement prepare = connection.prepareStatement(request);
 
@@ -158,7 +171,8 @@ public class UserRepository {
             prepare.setString(2, user.getLastname());
             prepare.setString(3, user.getEmail());
             prepare.setString(4, user.getPassword());
-            prepare.setInt(5, oldUser.getId());
+            prepare.setString(5, user.getRole().getName());
+            prepare.setInt(6, oldUser.getId());
 
             int rows = prepare.executeUpdate();
 
@@ -172,5 +186,28 @@ public class UserRepository {
             throw new RuntimeException(e);
         }
         return oldUser;
+    }
+
+    public static User saveWithRole(User user) {
+        User newUser = null;
+        try {
+            String sql = "INSERT INTO users(firstname, lastname, email, password, roles_id)" +
+                    "VALUE(?,?,?,?,(SELECT id FROM roles WHERE roles_name = ?))";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+
+            preparedStatement.setString(1, user.getFirstname());
+            preparedStatement.setString(2, user.getLastname());
+            preparedStatement.setString(3, user.getEmail());
+            preparedStatement.setString(4, user.getPassword());
+            preparedStatement.setString(5, user.getRole().getName());
+            int nbrRows = preparedStatement.executeUpdate();
+            if(nbrRows > 0){
+                newUser = user;
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return newUser;
     }
 }

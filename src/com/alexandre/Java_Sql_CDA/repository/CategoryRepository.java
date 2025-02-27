@@ -2,7 +2,6 @@ package com.alexandre.Java_Sql_CDA.repository;
 
 import com.alexandre.Java_Sql_CDA.db.Db;
 import com.alexandre.Java_Sql_CDA.model.Category;
-import com.alexandre.Java_Sql_CDA.model.User;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -50,6 +49,30 @@ public class CategoryRepository {
             PreparedStatement prepare = connection.prepareStatement(request);
 
             prepare.setInt(1, id);
+
+            ResultSet resultSet = prepare.executeQuery();
+
+            while (resultSet.next()){
+                getCategory = new Category();
+                getCategory.setId(resultSet.getInt("id"));
+                getCategory.setName(resultSet.getString("name"));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return getCategory;
+    }
+
+    public static Category findByName(String name){
+
+        Category getCategory = null;
+
+        try {
+            String request =  "SELECT id, name FROM categories WHERE name = ?";
+
+            PreparedStatement prepare = connection.prepareStatement(request);
+
+            prepare.setString(1, name);
 
             ResultSet resultSet = prepare.executeQuery();
 

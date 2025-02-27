@@ -1,7 +1,6 @@
 package com.alexandre.Java_Sql_CDA.repository;
 
 import com.alexandre.Java_Sql_CDA.db.Db;
-import com.alexandre.Java_Sql_CDA.model.Category;
 import com.alexandre.Java_Sql_CDA.model.Role;
 
 import java.sql.Connection;
@@ -25,7 +24,7 @@ public class RoleRepository {
             prepare.setString(1, role.getName());
 
             if(exists(role.getId())){
-                throw new RuntimeException("Category Exists");
+                throw new RuntimeException("Role Exists");
             }
 
             int rows = prepare.executeUpdate();
