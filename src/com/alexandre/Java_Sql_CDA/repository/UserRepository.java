@@ -14,8 +14,6 @@ import java.util.List;
 public class UserRepository {
     private static Connection connection = Db.get_connection();
 
-
-
     public static User save(User user){
 
         User newUser = null;
@@ -68,6 +66,33 @@ public class UserRepository {
                 getUser.setFirstname(resultSet.getString("firstname"));
                 getUser.setLastname(resultSet.getString("lastname"));
                 getUser.setEmail(resultSet.getString("email"));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return getUser;
+    }
+
+    public static User findById(int id){
+
+        User getUser = null;
+
+        try {
+            String request =  "SELECT id, firstname, lastname, email, password FROM users WHERE id = ?";
+
+            PreparedStatement prepare = connection.prepareStatement(request);
+
+            prepare.setInt(1, id);
+
+            ResultSet resultSet = prepare.executeQuery();
+
+            while (resultSet.next()){
+                getUser = new User();
+                getUser.setId(resultSet.getInt("id"));
+                getUser.setFirstname(resultSet.getString("firstname"));
+                getUser.setLastname(resultSet.getString("lastname"));
+                getUser.setEmail(resultSet.getString("email"));
+                getUser.setPassword(resultSet.getString("password"));
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
